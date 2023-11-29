@@ -262,3 +262,31 @@ results = gp_minimize(tune_lgbm, space, random_state=23,
                       verbose=1, n_calls=100, n_random_starts=20)
 params = results.x
 params
+
+learning_rate = params[0]
+num_leaves = params[1]
+min_child_samples = params[2]
+subsample = params[3]
+colsample_bytree = params[4]
+
+#LightGBM
+lgbm = LGBMClassifier(learning_rate= learning_rate,
+                      num_leaves= num_leaves,
+                      min_child_samples= min_child_samples,
+                      subsample= subsample,
+                      colsample_bytree= colsample_bytree,
+                      random_state=23, subsample_freq=1,
+                      n_estimators=200)
+
+lgbm.fit(X_train, y_train)
+
+y_pred_train = lgbm.predict(X_train)
+y_score_train = lgbm.predict_proba(X_train)[:,1]
+
+y_pred_test = lgbm.predict(X_test)
+y_score_test = lgbm.predict_proba(X_test)[:,1]
+
+evaluate_model(y_test, y_pred_test, y_score_test, normalize_matrix="true")
+
+model_filename = 'lgbm_model.joblib'
+joblib.dump(lgbm, model_filename)
