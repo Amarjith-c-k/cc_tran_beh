@@ -80,3 +80,25 @@ predictions = predict_fraud(new_data_processed, lgbm_model)
 # Display the predictions
 print("Predictions:")
 print(predictions)
+
+
+def predict_fraud_prob(data, model):
+    # Assuming data is a DataFrame with the same structure as the training data
+    X = data.drop(columns=["is_fraud"])
+    y_pred_prob = model.predict_proba(X)[:, 1]
+    return y_pred_prob
+
+# Example usage:
+# Load the new data
+new_data_path = 'sample_data.csv'
+new_data = pd.read_csv(new_data_path)
+
+# Preprocess the new data
+new_data_processed = preprocess_new_data(new_data, columns_to_encode, gender_mapping, intervals)
+
+# Make predictions and get predicted probabilities
+predicted_probabilities = predict_fraud_prob(new_data_processed, lgbm_model)
+
+# Display the predictions, actual labels, and predicted probabilities
+print("Predictions:")
+print(predicted_probabilities)
