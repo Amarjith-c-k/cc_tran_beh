@@ -4,10 +4,13 @@ import numpy as np
 import category_encoders as ce
 from lightgbm import LGBMClassifier
 import joblib
+import random
+import string
 
 # Load the trained model
 model_filename = 'lgbm_model.joblib'
 lgbm_model = joblib.load(model_filename)
+
 
 # Example Usage for Train Data
 columns_to_encode = ["category", "state", "city", "job"]
@@ -31,6 +34,24 @@ def classify_frequency(freq, intervals):
         if freq <= c:
             return i
 
+# Function to generate a captcha
+def generate_captcha():
+    captcha_string = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    return captcha_string
+
+# Function to display the captcha to the user
+def display_captcha(captcha_string):
+    print("Captcha: ", captcha_string)
+
+# Function to verify if the user's input matches the captcha
+def verify_captcha(user_input, captcha_string):
+    return user_input.upper() == captcha_string
+
+# Function to send captcha for fraud transaction
+def send_captcha(transaction_id, captcha_string):
+    print(f"Sending captcha to transaction with ID {transaction_id}: {captcha_string}")
+
+# Function to preprocess new data
 def preprocess_new_data(data, columns_to_encode, gender_mapping, intervals):
     data['age'] = dt.date.today().year - pd.to_datetime(data['dob']).dt.year
     data['hour'] = pd.to_datetime(data['trans_date_trans_time']).dt.hour
@@ -57,36 +78,11 @@ def preprocess_new_data(data, columns_to_encode, gender_mapping, intervals):
 
     return data
 
-
 def predict_fraud(data, model):
     # Assuming data is a DataFrame with the same structure as the training data
     X = data.drop(columns=["is_fraud"])
     y_pred = model.predict(X)
     return y_pred
-
-
-# Example usage:
-# Load the new data
-new_data_path = 'sample_data.csv'
-new_data = pd.read_csv(new_data_path)
-
-# Preprocess the new data
-new_data_processed = preprocess_new_data(new_data, columns_to_encode, gender_mapping, intervals)
-
-# Iterate through each row and print the values
-for index, row in new_data.iterrows():
-    print(f"Row {index + 1}:")
-    for column, value in row.items():
-        print(f"  {column}: {value}")
-    print("-" * 30)
-
-# Make predictions
-predictions = predict_fraud(new_data_processed, lgbm_model)
-
-# Display the predictions
-print("Predictions:")
-print(predictions)
-
 
 def predict_fraud_prob(data, model):
     # Assuming data is a DataFrame with the same structure as the training data
@@ -94,17 +90,54 @@ def predict_fraud_prob(data, model):
     y_pred_prob = model.predict_proba(X)[:, 1]
     return y_pred_prob
 
-# Make predictions and get predicted probabilities
-predicted_probabilities = predict_fraud_prob(new_data_processed, lgbm_model)
+def main():
+    # Example usage:
+    # Load the new data
+    new_data_path = 'sample_data.csv'
+    new_data = pd.read_csv(new_data_path)
 
-# Display the predictions, actual labels, and predicted probabilities
-print("Predictions:")
-print(predicted_probabilities)
+    # Preprocess the new data
+    new_data_processed = preprocess_new_data(new_data.copy(), columns_to_encode, gender_mapping, intervals)
 
-threshold = .90
-# Check if any predicted probability is above the threshold
-for prob in predicted_probabilities:
-    if prob >= threshold:
-        print("Prediction: Fraud")    
-    else:
-        print("Prediction: Not Fraud")
+    # Make predictions and get predicted probabilities
+    predicted_probabilities = predict_fraud_prob(new_data_processed, lgbm_model)
+
+    # Store the predictions in a DataFrame
+    predictions_df = pd.DataFrame({
+        'trans_num': new_data['trans_num'],  # Use the original 'trans_num' column
+        'predicted_probability': predicted_probabilities,
+        'first_name': new_data['first'],  # Retrieve 'first' name
+        'last_name': new_data['last']  # Retrieve 'last' name
+    })
+
+    # Display the predictions, actual labels, and predicted probabilities
+    print("Predictions:")
+    print(predictions_df)
+
+    threshold = 0.90
+    # Check if any predicted probability is above the threshold
+    for index, row in predictions_df.iterrows():
+        if row['predicted_probability'] >= threshold:
+            print(f"Prediction for transaction {row['trans_num']}: Fraud")
+            print(f"Cardholder: {row['first_name']} {row['last_name']}")
+
+            # Generate and display a captcha
+            captcha = generate_captcha()
+            display_captcha(captcha)
+
+            # Get user input for captcha
+            user_input = input("Enter the captcha: ")
+
+            # Verify the user's input
+            if verify_captcha(user_input, captcha):
+                print("Captcha verification successful!")
+
+                # Send captcha for the fraud transaction
+                send_captcha(row['trans_num'], captcha)
+            else:
+                print("Captcha verification failed. Captcha not sent.")
+        else:
+            print(f"Prediction for transaction {row['trans_num']}: Not Fraud")
+
+if __name__ == "__main__":
+    main()
