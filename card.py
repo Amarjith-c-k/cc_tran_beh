@@ -73,6 +73,12 @@ new_data = pd.read_csv(new_data_path)
 # Preprocess the new data
 new_data_processed = preprocess_new_data(new_data, columns_to_encode, gender_mapping, intervals)
 
+# Iterate through each row and print the values
+for index, row in new_data.iterrows():
+    print(f"Row {index + 1}:")
+    for column, value in row.items():
+        print(f"  {column}: {value}")
+    print("-" * 30)
 
 # Make predictions
 predictions = predict_fraud(new_data_processed, lgbm_model)
