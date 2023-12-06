@@ -45,7 +45,7 @@ def display_captcha(captcha_string):
 
 # Function to verify if the user's input matches the captcha
 def verify_captcha(user_input, captcha_string):
-    return user_input.upper() == captcha_string
+    return user_input == captcha_string
 
 # Function to send captcha for fraud transaction
 def send_captcha(transaction_id, captcha_string):
@@ -111,14 +111,14 @@ def main():
     })
 
     # Display the predictions, actual labels, and predicted probabilities
-    print("Predictions:")
-    print(predictions_df)
+    #print("Predictions:")
+    #print(predictions_df)
 
     threshold = 0.90
     # Check if any predicted probability is above the threshold
     for index, row in predictions_df.iterrows():
         if row['predicted_probability'] >= threshold:
-            print(f"Prediction for transaction {row['trans_num']}: Fraud")
+            print(f"Status of Transaction ID: {row['trans_num']}: Suspect Fraud!!!!!")
             print(f"Cardholder: {row['first_name']} {row['last_name']}")
 
             # Generate and display a captcha
@@ -134,10 +134,15 @@ def main():
 
                 # Send captcha for the fraud transaction
                 send_captcha(row['trans_num'], captcha)
-            else:
-                print("Captcha verification failed. Captcha not sent.")
-        else:
-            print(f"Prediction for transaction {row['trans_num']}: Not Fraud")
 
+                print("Transaction Successful!!!!!")
+                print("\n")
+            else:
+                print("Captcha verification failed.")
+                print("Card Blocked!!!!!")
+                print("\n")
+        else:
+            print(f"Status of Transaction ID: {row['trans_num']}: Successfull!!!!!")
+            print("\n")
 if __name__ == "__main__":
     main()
