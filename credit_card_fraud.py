@@ -137,12 +137,18 @@ def main():
 
                 print("Transaction Successful!!!!!")
                 print("\n")
+                print("*--------------------*--------------------*--------------------*--------------------*")
+                print("\n")
             else:
                 print("Captcha verification failed.")
                 print("Card Blocked!!!!!")
                 print("\n")
+                print("*--------------------*--------------------*--------------------*--------------------*")
+                print("\n")
         else:
             print(f"Status of Transaction ID: {row['trans_num']}: Successfull!!!!!")
+            print("\n")
+            print("*--------------------*--------------------*--------------------*--------------------*")
             print("\n")
 if __name__ == "__main__":
     main()
